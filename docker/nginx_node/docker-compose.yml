@@ -1,0 +1,42 @@
+services:
+
+  db:
+    image: mysql:5.7.37
+    container_name: db
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    tty: true
+    networks:
+      - desafio_docker_network
+    volumes:
+      - ./data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: teste
+      MYSQL_DATABASE: curso_db
+
+  app:
+    build: 
+      context: app
+    container_name: app
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 20s docker-entrypoint.sh index.js
+    networks: 
+      - desafio_docker_network
+    tty: true
+    depends_on: 
+       - db
+
+  nginx:
+    build:
+      context: nginx
+    container_name: nginx
+    networks: 
+      - desafio_docker_network
+    ports: 
+      - "8080:80"
+    depends_on: 
+       - app
+  
+networks:
+  desafio_docker_network:
+    driver: bridge
+
